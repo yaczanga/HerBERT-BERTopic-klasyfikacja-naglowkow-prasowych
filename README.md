@@ -1,5 +1,7 @@
 # Klasyfikacja i modelowanie tematyczne nagłówków polskich gazet
 
+![testy](https://github.com/yaczanga/HerBERT-BERTopic-klasyfikacja-naglowkow-prasowych/actions/workflows/testy.yml/badge.svg)
+
 Rozpoznawanie wydawcy nagłówka prasowego modelem HerBERT i modelowanie tematów błędów klasyfikatora przez BERTopic, dla trzech tytułów o różnej orientacji politycznej: **Niezależna** (etykieta 0), **OKO.press** (1), **Rzeczpospolita** (2).
 
 Korpus liczy 55 914 nagłówków z okresu 2022-01 - 2026-02, zebranych własnymi scraperami z publicznych archiwów. Dostrojony HerBERT rozpoznaje wydawcę z F1-macro 0,749 na zbiorze testowym, wobec 0,671 dla TF-IDF z regresją logistyczną. Nagłówki sklasyfikowane błędnie grupują się tematycznie, co wskazuje obszary, w których języki trzech tytułów zbliżają się do siebie.
