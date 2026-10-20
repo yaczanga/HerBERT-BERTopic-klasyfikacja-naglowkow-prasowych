@@ -1,0 +1,18 @@
+{
+  "best_trial": 499,
+  "npmi": 0.20078260573120407,
+  "outlier_ratio": 0.7259541438637909,
+  "n_topics": 53,
+  "params": {
+    "n_neighbors": 45,
+    "n_components": 5,
+    "metric_umap": "cosine",
+    "min_dist": 0.09585362686709284,
+    "min_cluster_size": 65,
+    "metric_hdbscan": "euclidean",
+    "cluster_selection_method": "eom",
+    "ngram_range": 3,
+    "min_df": 2,
+    "max_df": 0.9412562490903456
+  }
+}

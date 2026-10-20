@@ -1,0 +1,6 @@
+﻿model,accuracy_valid,f1_macro_valid,accuracy_test,f1_macro_test
+Klasa większościowa,0.356,0.175,0.419,0.197
+TF-IDF + regresja logistyczna,0.668,0.662,0.682,0.671
+TF-IDF + liniowy SVM,0.649,0.643,0.659,0.647
+HerBERT (bez dostrojenia),0.695,0.688,0.704,0.688
+HerBERT (dostrojony),0.769,0.764,0.762,0.749

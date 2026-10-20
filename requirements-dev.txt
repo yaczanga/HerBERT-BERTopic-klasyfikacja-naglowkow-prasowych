@@ -1,0 +1,9 @@
+# Zaleznosci testowe. Testy w tests/ dzialaja na probie syntetycznej i nie
+# wymagaja ani GPU, ani korpusu, wiec ten plik jest podzbiorem requirements.txt
+# rozszerzonym o pytest.
+#
+#   pip install -r requirements-dev.txt && pytest -q
+
+pandas==3.0.3
+numpy==2.4.6
+pytest==9.1.1

@@ -1,0 +1,53 @@
+# 1. Dane
+# Duze CSV z korpusem i predykcjami zostaja poza repozytorium.
+# Wzorzec jest zawezony do data/, zeby male tabele wynikowe w outputs/ mogly
+# trafic do repozytorium.
+data/*.csv
+data/*.xlsx
+data/*.pkl
+
+# 2. Wyniki i modele (checkpointy HerBERT, cache transformers)
+herbert_wyniki/
+transformers_cache/
+checkpoint-*/
+# modele, bazy Optuny i checkpointy prob - regenerowalne z notebookow 01a/01b
+models/
+# duze binaria gdziekolwiek indziej
+*.db
+*.npy
+*.safetensors
+outputs/*.pkl
+
+# 3. Dokumenty i pliki tymczasowe pakietu MS Office
+# Dokumenty zrodlowe trzymane sa poza repozytorium, w D:/ARTYKUL_ARCHIVE.
+*.docx
+*.pdf
+~$*.docx
+*.tmp
+.DS_Store
+Thumbs.db
+
+# 4. Logi
+*.log
+log.txt
+
+# 5. Srodowisko Python i Jupyter
+__pycache__/
+*.py[cod]
+*$py.class
+.ipynb_checkpoints/
+.env
+venv/
+env/
+venv312/
+
+# 6. Archiwum (trzymane poza repozytorium w D:/ARTYKUL_ARCHIVE)
+archive/
+
+# 7. Konfiguracja narzedzi lokalnych
+.claude/
+.obsidian/
+
+
+# 8. Cache narzedzi
+.pytest_cache/

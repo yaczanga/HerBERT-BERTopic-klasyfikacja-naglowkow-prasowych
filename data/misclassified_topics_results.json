@@ -1,0 +1,16 @@
+{
+  "n_docs": 3042,
+  "n_topics": 14,
+  "outlier_ratio": 0.5900723208415516,
+  "NPMI": -0.10099905474499074,
+  "UMass": -11.788172407301158,
+  "UCI": -6.267007729483699,
+  "best_params": {
+    "n_neighbors": 19,
+    "n_components": 9,
+    "min_dist": 0.039720872873986394,
+    "min_cluster_size": 36,
+    "csm": "leaf",
+    "min_df": 2
+  }
+}

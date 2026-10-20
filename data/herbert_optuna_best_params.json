@@ -1,0 +1,20 @@
+{
+  "best_trial_number": 381,
+  "best_value": 0.7746564920466851,
+  "metric": "eval_f1_macro",
+  "best_params": {
+    "learning_rate": 2.9475896840116445e-05,
+    "num_train_epochs": 4,
+    "weight_decay": 0.028362374324022332,
+    "warmup_ratio": 0.02880895755977295,
+    "hidden_dropout_prob": 0.10245159762585518,
+    "attention_probs_dropout_prob": 0.1205208926386869,
+    "label_smoothing_factor": 0.1396809616906594,
+    "per_device_train_batch_size": 32,
+    "focal_loss_gamma": 2.891408878477484,
+    "decay_rate": 0.940517883655435,
+    "lr_scheduler_type": "cosine",
+    "num_frozen_layers": 0,
+    "adam_beta2": 0.999
+  }
+}

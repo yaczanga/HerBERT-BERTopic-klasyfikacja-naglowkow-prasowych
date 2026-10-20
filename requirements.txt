@@ -1,0 +1,54 @@
+# Wersje odczytane ze srodowiska, w ktorym policzono wyniki podane w README
+# (venv312, Python 3.12). Zakres sprawdzenia: kazdy modul importowany przez kod
+# i przez notebooki daje sie wczytac, a zadna sciezka importu nie siega po
+# pakiet nieobecny na tej liscie. Zaleznosci czasu wykonania sprawdzono
+# heurystycznie; notebookow nie uruchamiano, bo trening wymaga GPU.
+#
+# UWAGA - CUDA. Ponizszy wpis `torch` instaluje z PyPI build CPU. Trening
+# HerBERTa i liczenie embeddingow BERTopic wymagaja buildu CUDA; zainstaluj go
+# PRZED reszta zaleznosci:
+#
+#   pip install torch==2.6.0 --index-url https://download.pytorch.org/whl/cu124
+#   pip install -r requirements.txt
+#
+# Sprawdzenie: python -c "import torch; print(torch.cuda.is_available())"
+
+pandas==3.0.3
+numpy==2.4.6
+scipy==1.18.0
+matplotlib==3.11.0
+scikit-learn==1.9.0
+bertopic==0.17.4
+sentence-transformers==5.6.0
+umap-learn==0.5.12
+hdbscan==0.8.44
+gensim==4.4.0
+# sacremoses nie jest importowany wprost - siega po niego tokenizator HerBERTa
+sacremoses==0.1.1
+torch==2.6.0
+# safetensors nie jest importowany wprost - wymaga go zapis modelu BERTopic
+# przez save(serialization="safetensors")
+safetensors==0.8.0
+transformers==4.45.2
+datasets==5.0.1
+# protobuf i sentencepiece nie sa importowane wprost - wymaga ich wczytanie
+# tokenizatora HerBERTa przez AutoTokenizer
+protobuf==7.35.1
+sentencepiece==0.2.1
+# accelerate nie jest importowany wprost - wymaga go Trainer z transformers
+accelerate==1.14.0
+optuna==4.9.0
+morfeusz2==1.99.15
+stop-words==2025.11.4
+nltk==3.10.0
+# ipykernel nie jest importowany wprost - jest jadrem, na ktorym chodza notebooki
+ipykernel==7.3.0
+ipython==9.15.0
+# ipywidgets nie jest importowany wprost - bez niego tqdm w notebooku
+# zglasza TqdmWarning i rysuje pasek tekstowy zamiast widgetu
+ipywidgets==8.1.8
+
+
+# scraping (src/scraping/, notebooks/00a_scraping.ipynb)
+aiohttp==3.14.3
+beautifulsoup4==4.15.0

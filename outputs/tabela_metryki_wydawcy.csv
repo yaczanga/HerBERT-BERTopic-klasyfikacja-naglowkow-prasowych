@@ -1,0 +1,9 @@
+﻿Gazeta,Zbiór,Accuracy,Precision,Recall,F1-Score,Liczba
+Niezależna,walidacyjny,0.7688,0.7848,0.8203,0.8022,5637
+OKO.press,walidacyjny,,0.8324,0.7234,0.7741,6207
+RP,walidacyjny,,0.6728,0.7667,0.7167,3999
+Średnia ważona,walidacyjny,0.7688,0.7752,0.7688,0.7696,15843
+Niezależna,testowy,0.7625,0.8208,0.7987,0.8096,5364
+OKO.press,testowy,,0.8022,0.7578,0.7794,4517
+RP,testowy,,0.6197,0.7033,0.6589,2926
+Średnia ważona,testowy,0.7625,0.7683,0.7625,0.7645,12807
