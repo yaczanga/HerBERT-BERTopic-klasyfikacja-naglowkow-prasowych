@@ -7,3 +7,8 @@
 pandas==3.0.3
 numpy==2.4.6
 pytest==9.1.1
+
+# Testy eksportu rysunkow do druku (tests/test_rysunki_do_druku.py) rysuja
+# macierz pomylek z zapisanej tabeli liczebnosci - nadal bez korpusu i GPU.
+matplotlib==3.11.0
+scikit-learn==1.9.0

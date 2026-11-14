@@ -16,6 +16,16 @@ from src import plot_style as style
 style.apply_style()
 
 
+def _tekst_tytulu(title, domyslny):
+    """Rozstrzyga tytul rysunku: None daje domyslny, False albo '' - zaden.
+
+    Tytul na obrazku jest wygoda notebooka. Wydawca wymaga podpisu pod
+    rysunkiem, w tekscie artykulu, a nie wrysowanego w plik, wiec eksport do
+    zlozenia (src/figures_publication.py) wola te same funkcje z title=False.
+    """
+    return domyslny if title is None else (title or '')
+
+
 def _zapisz(fig, save_path):
     """Zapisuje rysunek pod podana sciezka i zwraca go dalej.
 
@@ -82,16 +92,20 @@ def plot_confusion_matrix(y_true, y_pred, labels=None, title=None,
                 primary = f'{counts[i, j]:,}'
                 secondary = ''
             ax.text(j, i - (0.10 if secondary else 0.0), primary,
-                    ha='center', va='center', color=colour, fontsize=12)
+                    ha='center', va='center', color=colour,
+                    fontsize=style.font_size(12 / 11))
             if secondary:
                 ax.text(j, i + 0.17, secondary, ha='center', va='center',
-                        color=colour, fontsize=9.5, alpha=0.85)
+                        color=colour, alpha=0.85,
+                        fontsize=style.font_size(9.5 / 11))
 
     ax.set_xticks(idx, labels)
     ax.set_yticks(idx, labels)
     ax.set_xlabel('Predicted publisher')
     ax.set_ylabel('True publisher')
-    ax.set_title(title or 'Confusion matrix, test set')
+    tytul = _tekst_tytulu(title, 'Confusion matrix, test set')
+    if tytul:
+        ax.set_title(tytul)
     for spine in ax.spines.values():
         spine.set_visible(False)
 
@@ -129,7 +143,7 @@ def plot_monthly_counts(data, valid_start=None, test_start=None, title=None,
         miesieczne = (data[data['label'] == label]
                       .set_index('date_parsed').resample('MS').size())
         ax.plot(miesieczne.index, miesieczne.values, label=PUBLISHER_LABELS[label],
-                marker='o', markersize=3, linewidth=1.8,
+                marker='o', markersize=style.MARKERSIZE, linewidth=style.LINEWIDTH,
                 **style.PUBLISHER_STYLES[label])
 
     poczatek, koniec = data['date_parsed'].min(), data['date_parsed'].max()
@@ -145,13 +159,15 @@ def plot_monthly_counts(data, valid_start=None, test_start=None, title=None,
                                  (valid_start, '  valid', 'left'),
                                  (test_start, '  test', 'left')):
         ax.text(x, gora * 0.98, tekst, ha=wyrownanie, va='top',
-                fontsize=9, color=style.TEXT_SECONDARY)
+                fontsize=style.font_size(9 / 11), color=style.TEXT_SECONDARY)
 
     ax.xaxis.set_major_locator(mdates.MonthLocator(interval=3))
     ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m'))
     ax.tick_params(axis='x', labelrotation=45)
     ax.set_ylabel('Headlines per month')
-    ax.set_title(title or 'Monthly headline counts by publisher')
+    tytul = _tekst_tytulu(title, 'Monthly headline counts by publisher')
+    if tytul:
+        ax.set_title(tytul)
     ax.legend(loc='upper left', ncol=3)
     fig.tight_layout()
 
@@ -207,11 +223,14 @@ def plot_topic_error_series(soft, topic_model=None, topics=None, n_cols=2,
                      .groupby('date_parsed')[value].sum()
                      .reindex(miesiace, fill_value=0.0))
             ax.plot(miesiace, seria.values, label=PUBLISHER_LABELS[label],
-                    marker='o', markersize=3, linewidth=1.8,
+                    marker='o', markersize=style.MARKERSIZE, linewidth=style.LINEWIDTH,
                     **style.PUBLISHER_STYLES[label])
 
         nazwa = topic_label(topic_model, temat, fallback='Topic {}') if topic_model else None
-        ax.set_title(f'Topic {temat + 1}' + (f': {nazwa}' if nazwa else ''), fontsize=11)
+        # Podpis panelu nazywa dane w panelu, nie caly rysunek, wiec zostaje
+        # takze w eksporcie bez tytulu.
+        ax.set_title(f'Topic {temat + 1}' + (f': {nazwa}' if nazwa else ''),
+                     fontsize=style.font_size(1.0))
 
         # Zakres testowy to tusz nie-danych, wiec nosi MUTED i nie wchodzi do legendy.
         if split_date is not None and split_date <= miesiace[-1]:
@@ -219,7 +238,7 @@ def plot_topic_error_series(soft, topic_model=None, topics=None, n_cols=2,
             if i == 0:
                 ax.annotate('test set', xy=(split_date, 1.0), xycoords=('data', 'axes fraction'),
                             xytext=(4, -10), textcoords='offset points',
-                            fontsize=8, color=style.TEXT_SECONDARY)
+                            fontsize=style.font_size(8 / 11), color=style.TEXT_SECONDARY)
 
         if i % n_cols == 0:
             ax.set_ylabel(ylabel or 'Expected errors per month')
@@ -233,8 +252,10 @@ def plot_topic_error_series(soft, topic_model=None, topics=None, n_cols=2,
     uchwyty, etykiety = osie[0].get_legend_handles_labels()
     fig.legend(uchwyty, etykiety, loc='lower center', ncol=len(etykiety),
                bbox_to_anchor=(0.5, -0.01))
-    fig.suptitle(title or 'Expected classification errors by topic and publisher',
-                 x=0.0, ha='left', fontsize=13, color=style.TEXT)
+    tytul = _tekst_tytulu(title, 'Expected classification errors by topic and publisher')
+    if tytul:
+        fig.suptitle(tytul, x=0.0, ha='left', color=style.TEXT,
+                     fontsize=style.font_size(13 / 11))
     fig.tight_layout()
 
     return _zapisz(fig, save_path)
@@ -262,13 +283,13 @@ def _mark_split_and_events(ax, end, split_date=None, events=None):
         ax.axvspan(split_date, pd.to_datetime(end), color=style.MUTED, alpha=0.10, zorder=0)
         ax.annotate('test set', xy=(split_date, 1.0), xycoords=('data', 'axes fraction'),
                     xytext=(4, -10), textcoords='offset points',
-                    fontsize=8, color=style.TEXT_SECONDARY)
+                    fontsize=style.font_size(8 / 11), color=style.TEXT_SECONDARY)
     for opis, data_zdarzenia in (events or {}).items():
         data_zdarzenia = pd.to_datetime(data_zdarzenia)
         ax.axvline(data_zdarzenia, color=style.AXES, linestyle=':', linewidth=1.2, zorder=1)
         ax.annotate(opis, xy=(data_zdarzenia, 1.0), xycoords=('data', 'axes fraction'),
                     xytext=(4, -24), textcoords='offset points',
-                    fontsize=8, color=style.TEXT_SECONDARY)
+                    fontsize=style.font_size(8 / 11), color=style.TEXT_SECONDARY)
 
 
 def plot_metric_over_time(frame, value, by_publisher=False, ylabel=None, title=None,
@@ -298,13 +319,13 @@ def plot_metric_over_time(frame, value, by_publisher=False, ylabel=None, title=N
         for label in sorted(config.GAZETY):
             seria = d[d['label'] == label].sort_values('date')
             ax.plot(seria['date'], seria[value], label=PUBLISHER_LABELS[label],
-                    marker='o', markersize=3, linewidth=1.8,
+                    marker='o', markersize=style.MARKERSIZE, linewidth=style.LINEWIDTH,
                     **style.PUBLISHER_STYLES[label])
         ax.legend(loc='lower left', ncol=3)
     else:
         seria = d.sort_values('date')
         ax.plot(seria['date'], seria[value], color=style.REFERENCE,
-                marker='o', markersize=3, linewidth=1.8)
+                marker='o', markersize=style.MARKERSIZE, linewidth=style.LINEWIDTH)
 
     ax.set_xlim(d['date'].min(), d['date'].max())
     _mark_split_and_events(ax, d['date'].max(), split_date, events)
@@ -312,7 +333,9 @@ def plot_metric_over_time(frame, value, by_publisher=False, ylabel=None, title=N
     ax.set_ylabel(ylabel or value)
     # Awaryjny tytul nie moze byc sama nazwa kolumny - to identyfikator z kodu,
     # nie opis. Notebooki podaja title jawnie, ten wariant jest zabezpieczeniem.
-    ax.set_title(title or f'{value} over time')
+    tytul = _tekst_tytulu(title, f'{value} over time')
+    if tytul:
+        ax.set_title(tytul)
     fig.tight_layout()
 
     return _zapisz(fig, save_path)
@@ -358,12 +381,15 @@ def plot_probability_profile(profile, title=None, split_date=None, save_path=Non
         # kropki przebijaja przez litery.
         ax.annotate('test set', xy=(pd.to_datetime(split_date), 1.0),
                     xycoords=('data', 'axes fraction'), xytext=(4, -10),
-                    textcoords='offset points', fontsize=8, color=style.TEXT,
+                    textcoords='offset points', color=style.TEXT,
+                    fontsize=style.font_size(8 / 11),
                     bbox=dict(facecolor=style.BACKGROUND, edgecolor='none',
                               boxstyle='square,pad=0.2'))
     ax.tick_params(axis='x', labelrotation=45)
     ax.set_ylabel('Mean predicted probability')
-    ax.set_title(title or 'Mean predicted publisher profile over time')
+    tytul = _tekst_tytulu(title, 'Mean predicted publisher profile over time')
+    if tytul:
+        ax.set_title(tytul)
     ax.legend(loc='lower left', ncol=3)
     fig.tight_layout()
 
@@ -391,16 +417,19 @@ def plot_merge_levels(results, x='n_topics', highlight=None, title=None, save_pa
         if kolumna not in d.columns:
             continue
         ax.plot(d[x], d[kolumna], color=style.REFERENCE, marker='o',
-                markersize=3, linewidth=1.8)
+                markersize=style.MARKERSIZE, linewidth=style.LINEWIDTH)
         if highlight is not None and highlight in results.index:
             ax.plot(results.loc[highlight, x], results.loc[highlight, kolumna],
-                    marker='o', markersize=9, color=style.ACCENT, linestyle='none',
+                    marker='o', markersize=style.MARKERSIZE * 3, color=style.ACCENT,
+                    linestyle='none',
                     zorder=5)
-        ax.set_title(opis, fontsize=11)
+        ax.set_title(opis, fontsize=style.font_size(1.0))
         ax.set_xlabel('Topics after merging' if x == 'n_topics' else 'Merge distance')
 
-    fig.suptitle(title or 'Topic coherence across merge levels',
-                 x=0.0, ha='left', fontsize=13, color=style.TEXT)
+    tytul = _tekst_tytulu(title, 'Topic coherence across merge levels')
+    if tytul:
+        fig.suptitle(tytul, x=0.0, ha='left', color=style.TEXT,
+                     fontsize=style.font_size(13 / 11))
     fig.tight_layout()
 
     return _zapisz(fig, save_path)

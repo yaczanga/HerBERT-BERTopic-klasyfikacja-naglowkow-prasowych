@@ -129,6 +129,24 @@ Słownictwo pomyłek liczone jest w oknach półrocznych wyznaczanych numerem mi
 
 Wszystkie tabele, liczba błędów przekazana do modelu tematycznego i macierze pomyłek powstają z jednego pliku predykcji, w jednym wywołaniu. Bez tego liczby w sąsiadujących tabelach pochodzą z różnych przebiegów i rozjeżdżają się o kilka tysięcznych.
 
+### 5. Rysunki do złożenia w czasopiśmie
+
+Rysunki w `outputs/figures/` są robocze: mają tytuł na obrazku, szerokość dobraną do ekranu i 150 dpi. Wydawca przyjmuje rysunki inaczej - jeden plik na rysunek, nazwany numerem z tekstu, w szerokości łamu, bez podpisu wrysowanego w obrazek, bo podpis należy do tekstu artykułu, i w rozdzielczości nie niższej niż 300 dpi dla rastra, 500 dpi dla rysunku łączącego kreskę z rastrem oraz 1000 dpi dla samej kreski.
+
+Wersję do złożenia robi jedno polecenie z korzenia projektu:
+
+```bash
+python -m src.figures_publication                 # Fig1-Fig3 z tekstu artykułu
+python -m src.figures_publication --all           # i rysunki spoza artykułu
+python -m src.figures_publication --formats pdf,tif,png --dpi 1000
+```
+
+Pliki trafiają do `outputs/figures/publication/`. Domyślnie powstają dwie wersje każdego rysunku: wektorowy PDF, którego nie da się przeskalować w dół, i TIFF 600 dpi z bezstratną kompresją LZW, z wtopionym białym tłem i bez kanału alfa. Numeracja `Fig1`-`Fig3` jest numeracją z tekstu artykułu: miesięczne liczebności, macierz pomyłek na teście, średnie prawdopodobieństwo klasy prawdziwej.
+
+Moduł nie rysuje niczego od nowa. Woła te same funkcje z `src/visualization.py`, co notebooki, tyle że z `title=False` i w profilu drukarskim `plot_style.apply_style('print')`, który zmienia szerokość figury na szerokość łamu (90, 140 albo 190 mm) i skaluje pismo razem z nią. Proporcje boków zostają te same, więc rysunek złożony w czasopiśmie i rysunek w repozytorium pokazują to samo. Rysunek powstaje od razu w docelowej szerokości, zamiast być pomniejszany przy składzie - inaczej pismo zmalałoby tyle razy, ile razy zmalał rysunek.
+
+`Fig1` i `Fig3` czytają korpus i plik predykcji, których repozytorium nie zawiera; bez nich są pomijane z komunikatem, a eksport dochodzi do końca. `Fig2` odrysowuje się także bez nich, z `outputs/tabela_macierz_pomylek_test.csv`: macierz pomyłek zależy wyłącznie od dziewięciu liczb, więc odtworzenie jest dokładne, nie przybliżone.
+
 ## Dane
 
 Dane pochodzą z własnych scraperów i nie są dołączone do repozytorium ze względu na rozmiar. Przechowywane są wyłącznie metadane publiczne: tekst nagłówka, data publikacji i identyfikator wydawcy. Treści artykułów ani danych osobowych nie zapisywano.
@@ -177,12 +195,13 @@ Sam `pip install -r requirements.txt` zainstaluje build CPU, na którym trening 
 | 2. Analiza czasowa | `02_topic_model_time_series_analysis.ipynb` | `src.evaluation.build_error_time_series` | minuty, GPU |
 | 3. Analiza błędów | `03_misclassified_headlines_analysis.ipynb` | `src.evaluation.keywords_by_period`, `confidence_over_time`, `src.topics.build_misclassified_topics` | godziny, GPU |
 | 4. Tabele i rysunki | `04_tabele_i_rysunki.ipynb` | `src.evaluation.build_article_tables` | około 90 s, potem 30 s |
+| 5. Rysunki do złożenia | `python -m src.figures_publication` | `src.figures_publication.build` | sekundy |
 
-Każdy etap ma tę samą postać: definicja procesu jest funkcją w `src/`, notebook ją wywołuje i pokazuje wyniki. W `src/` nie ma `main()` ani wejść z linii poleceń - wszystko uruchamia się z notebooka.
+Każdy etap badania ma tę samą postać: definicja procesu jest funkcją w `src/`, notebook ją wywołuje i pokazuje wyniki. Wejście z linii poleceń mają tylko dwa kroki, które nie są etapami badania i których nie powtarza się przy czytaniu wyników: scrapery (`python -m src.scraping`) i eksport rysunków do złożenia (`python -m src.figures_publication`).
 
 ## Testy
 
-Testy sprawdzają gwarancje metodologiczne, od których zależą wnioski: brak wycieku informacji z przyszłości przy podziale chronologicznym, rozłączność podzbiorów, to, że czyszczenie nagłówków nie usuwa treści, oraz to, że nagłówek złożony z samych dopisków nie ginie w potoku. Jest ich 11, działają na próbie syntetycznej, więc nie wymagają korpusu ani GPU i wykonują się w 0,7 s.
+Testy sprawdzają gwarancje metodologiczne, od których zależą wnioski: brak wycieku informacji z przyszłości przy podziale chronologicznym, rozłączność podzbiorów, to, że czyszczenie nagłówków nie usuwa treści, oraz to, że nagłówek złożony z samych dopisków nie ginie w potoku. Osobny plik pilnuje warunków, które wydawca stawia rysunkom i których nie widać w kodzie rysującym: brak tytułu na obrazku, szerokość łamu, rozdzielczość i liczba kanałów rastra oraz to, że profil drukarski nie zmienia rysunków roboczych. Testów jest 22, działają na próbie syntetycznej i na zapisanej tabeli liczebności, więc nie wymagają korpusu ani GPU i wykonują się w kilka sekund.
 
 ```bash
 pip install -r requirements-dev.txt
@@ -211,6 +230,7 @@ Testy zweryfikowano mutacyjnie, na kopii projektu. Podmiana podziału chronologi
 │   ├── evaluation.py              # tabele metryk
 │   ├── plot_style.py              # system wizualny: tokeny barw i proporcje
 │   ├── visualization.py           # rysunki
+│   ├── figures_publication.py     # eksport rysunków do złożenia w czasopiśmie
 │   └── scraping/                  # scrapery (async HTML + JSON)
 ├── notebooks/                     # drivery: import z src/, wyniki i wykresy
 ├── data/                          # dane (duże pliki poza repozytorium)
@@ -269,7 +289,9 @@ Każdy plik w `outputs/` i `data/` ma funkcję, która go zapisuje. Katalogi `da
 | `outputs/figures/07_entropia_w_czasie.png`, `08_pewnosc_w_czasie.png` | `visualization.plot_metric_over_time` | 3 |
 | `models/misclassified_topic_model/`, `data/misclassified_topics_results.json`, `misclassified_with_topics.csv` | `topics.build_misclassified_topics` | 3 |
 | `outputs/tabela_punkty_odniesienia.csv`, `tabela_metryki_wydawcy.csv`, `tabela_tematy_bledow.csv/.md` | `evaluation.build_article_tables` | 4 |
+| `outputs/tabela_macierz_pomylek_test.csv`, `tabela_macierz_pomylek_walidacja.csv` | `evaluation.build_article_tables` przez `evaluation.confusion_table` | 4 |
 | macierze pomyłek `01_`, `02_` i `03_` w `outputs/figures/` | `evaluation.build_article_tables` przez `visualization.plot_confusion_matrix` | 4 |
+| `outputs/figures/publication/Fig1-Fig3` (PDF i TIFF) | `figures_publication.build` | 5 |
 
 Bazy prób Optuny (`models/herbert_optuna.db`, `models/bertopic_optuna.db`, `models/misclassified_optuna.db`) zapisuje sama Optuna; wczytanie istniejącej bazy pozwala obejrzeć wyniki strojenia bez powtarzania go, a przerwane strojenie podjąć. Każde kolejne wywołanie dokłada `n_trials` prób do już zapisanych, więc o liczbę prób w bazie trzeba zapytać samemu, a nie zakładać, że równa się ostatniemu argumentowi. Baza wiąże się z konkretnym zbiorem wejściowym: liczba pomyłek zmienia się przy każdym przeliczeniu predykcji, więc model tematyczny pomyłek zapisuje ją w atrybutach badania i ostrzega, gdy przestaje się zgadzać.
 
@@ -360,8 +382,13 @@ Spis pełny, bo README jest jedynym dokumentem opisującym to repozytorium. Funk
 | `plot_metric_over_time` | szereg miesięczny jednej miary, łącznie albo per wydawca |
 | `plot_probability_profile` | skład przewidywania w czasie, warstwami |
 | `plot_merge_levels` | spójność na poziomach scalania, z zaznaczonym poziomem wybranym |
-| `plot_style.apply_style` | ustawia `rcParams`; wywoływana przy imporcie `visualization` |
+| `plot_style.apply_style` | ustawia `rcParams`; wywoływana przy imporcie `visualization`. Argument `profile` przełącza proporcje i pismo między ekranem a drukiem |
 | `plot_style.panel_grid` | rozmiar figury dla siatki paneli, wyprowadzony z tokenu `WIDE` |
+| `plot_style.font_size` | rozmiar pisma jako wielokrotność bazowego, żeby napisy wewnątrz rysunku malały razem z nim |
+| **`figures_publication.build`** | eksport rysunków artykułu do osobnych plików, bez tytułów i w szerokości łamu |
+| `figures_publication.zapisz` | zapis jednej figury w kilku formatach, z kadrowaniem i kompresją wymaganą przez wydawcę |
+
+Każda funkcja rysująca przyjmuje `title`: `None` daje tytuł domyślny, własny napis go zastępuje, a `False` zostawia rysunek bez tytułu. Z ostatniego wariantu korzysta eksport do złożenia, bo podpis rysunku należy do tekstu artykułu, nie do pliku graficznego. Podpisy paneli w rysunkach wielopanelowych zostają, bo nazywają dane w panelu, a nie cały rysunek.
 
 Barwy i proporcje pochodzą wyłącznie z `plot_style`; funkcje rysujące sięgają po token opisujący rolę koloru w danych, nie po wartość. Trzy barwy tożsamości to błękit, cynober i zieleń z rodziny Okabe-Ito; najsłabsza para ma separację CIEDE2000 16,7 przy deuteranopii, wobec przyjętego progu 8, a informacja powtórzona jest w kroju linii i w deseniu, więc rysunek zachowuje sens w druku czarno-białym. Czwartej barwy tożsamości system nie ma: kategorie uporządkowane idą rampą `ORDINAL_RAMP`, a kategorie równorzędne liczniejsze niż trzy rozbijane są na osobne panele.
 

@@ -17,6 +17,9 @@ models/
 *.npy
 *.safetensors
 outputs/*.pkl
+# Rysunki do zlozenia w czasopismie: duze TIFF-y, odtwarza je jedno polecenie
+# python -m src.figures_publication
+outputs/figures/publication/
 
 # 3. Dokumenty i pliki tymczasowe pakietu MS Office
 # Dokumenty zrodlowe trzymane sa poza repozytorium, w D:/ARTYKUL_ARCHIVE.

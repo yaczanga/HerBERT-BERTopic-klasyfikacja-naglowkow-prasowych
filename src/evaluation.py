@@ -148,6 +148,25 @@ def zapisz_tabele(tab, nazwa, markdown=False):
         (config.OUTPUTS_DIR / f"{nazwa}.md").write_text("\n".join(linie), encoding="utf-8")
 
 
+def confusion_table(y_true, y_pred, gazety=None):
+    """Macierz pomylek jako tabela liczebnosci: wiersz prawdziwy, kolumna predykcja.
+
+    Rysunek pokazuje te same liczby, ale zapisany obrazek nie da sie odczytac
+    maszynowo. Tabela jest wiec zrodlem, z ktorego macierz da sie odrysowac
+    bez korpusu - korzysta z tego eksport do zlozenia w czasopismie, patrz
+    src/figures_publication.py.
+    """
+    from sklearn.metrics import confusion_matrix
+
+    gazety = gazety or config.GAZETY
+    idx = sorted(gazety)
+    nazwy = [gazety[i] for i in idx]
+    counts = confusion_matrix(y_true, y_pred, labels=idx)
+    tab = pd.DataFrame(counts, columns=nazwy)
+    tab.insert(0, "Wydawca prawdziwy", nazwy)
+    return tab
+
+
 # Macierze pomylek rysuje src/visualization.py (plot_confusion_matrix), ktory
 # korzysta z systemu wizualnego projektu z src/plot_style.py. Poprzednia wersja
 # oparta na ConfusionMatrixDisplay zostala stad usunieta, zeby nie bylo dwoch
@@ -200,6 +219,10 @@ def build_article_tables(skip_baselines=False, save=True, include_frozen=True):
     if save:
         zapisz_tabele(t4, "tabela_punkty_odniesienia")
         zapisz_tabele(t5, "tabela_metryki_wydawcy")
+        zapisz_tabele(confusion_table(test["label"], test["predicted_label"]),
+                      "tabela_macierz_pomylek_test")
+        zapisz_tabele(confusion_table(valid["label"], valid["predicted_label"]),
+                      "tabela_macierz_pomylek_walidacja")
         if tc is not None:
             zapisz_tabele(tc, "tabela_tematy_bledow", markdown=True)
 
