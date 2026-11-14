@@ -145,7 +145,34 @@ Pliki trafiają do `outputs/figures/publication/`. Domyślnie powstają dwie wer
 
 Moduł nie rysuje niczego od nowa. Woła te same funkcje z `src/visualization.py`, co notebooki, tyle że z `title=False` i w profilu drukarskim `plot_style.apply_style('print')`, który zmienia szerokość figury na szerokość łamu (90, 140 albo 190 mm) i skaluje pismo razem z nią. Proporcje boków zostają te same, więc rysunek złożony w czasopiśmie i rysunek w repozytorium pokazują to samo. Rysunek powstaje od razu w docelowej szerokości, zamiast być pomniejszany przy składzie - inaczej pismo zmalałoby tyle razy, ile razy zmalał rysunek.
 
-`Fig1` i `Fig3` czytają korpus i plik predykcji, których repozytorium nie zawiera; bez nich są pomijane z komunikatem, a eksport dochodzi do końca. `Fig2` odrysowuje się także bez nich, z `outputs/tabela_macierz_pomylek_test.csv`: macierz pomyłek zależy wyłącznie od dziewięciu liczb, więc odtworzenie jest dokładne, nie przybliżone.
+`Fig2` nie potrzebuje żadnego z nich: odrysowuje się z `outputs/tabela_macierz_pomylek_test.csv`, a macierz pomyłek zależy wyłącznie od dziewięciu liczb, więc odtworzenie jest dokładne, nie przybliżone. `Fig1` i `Fig3` czytają korpus i plik predykcji, których repozytorium nie zawiera; bez nich powstają z odczytu zapisanych PNG, opisanego niżej.
+
+### Odczyt punktów danych z zapisanych rysunków
+
+`src/figures_digitised.py` czyta `outputs/figures/05_liczebnosci_miesieczne.png` i `08_pewnosc_w_czasie.png` jako obraz: znajduje środki znaczników serii, przelicza je na wartości po kalibracji osi i zapisuje jako tabele miesięczne w `outputs/digitised/`. Kalibracja osi pionowej bierze się z linii siatki, poziomej - z linii podziału zbiorów na rysunku 1 i z krawędzi osi na rysunku 3. Znacznik ma średnicę około 6 pikseli, a linia serii około 4, więc splot maski barwy z krążkiem tej wielkości odpowiada najsilniej na środku znacznika; prostokąt legendy jest z maski wycinany, bo znacznik w legendzie wygląda jak punkt danych.
+
+To jest wyjście awaryjne, nie równoważne źródło. Służy jednej sytuacji: trzeba złożyć rysunek na maszynie, na której nie ma `data/`. Kiedy katalog `data/` jest na miejscu, eksport bierze dane stamtąd i tabel odczytu nie dotyka. Kiedy go nie ma, eksport mówi o tym w komunikacie przy każdym rysunku i raz na końcu.
+
+Dokładność sprawdza się względem liczb podanych w artykule, których sam odczyt nie zna, więc trafienie w nie jest niezależnym potwierdzeniem:
+
+| Kontrola | Artykuł | Odczyt | Błąd |
+|---|---|---|---|
+| nagłówki, Niezależna | 20 892 | 20 901 | +0,04% |
+| nagłówki, OKO.press | 19 781 | 19 783 | +0,01% |
+| nagłówki, RP | 15 241 | 15 234 | -0,05% |
+| nagłówki, razem | 55 914 | 55 918 | +0,01% |
+| pewność, walidacja, średnia | 0,654 | 0,653 | -0,15% |
+| pewność, walidacja, minimum | 0,616 | 0,616 | 0,00% |
+| pewność, walidacja, maksimum | 0,677 | 0,677 | 0,00% |
+
+Błąd pojedynczego punktu jest rzędu jednej dziesiątej piksela, czyli około 0,4 nagłówka na rysunku 1 i około 0,0005 na rysunku 3 - mniej niż grubość linii, którą rysunek jest narysowany. Okres walidacyjny wybrano do kontroli dlatego, że mieści się w całych miesiącach; okresy uczący i testowy zaczyna i kończy miesiąc przecięty granicą podziału, której rysunek nie pokazuje osobno, więc zakresy podane dla nich w artykule nie dają się porównać z punktami na rysunku. Średnia miesięczna pewności liczona jest tu z wagą liczebności miesiąca, czyli z odczytu drugiego rysunku - zgodność obu kontroli naraz potwierdza jeden i drugi.
+
+Odczyt ma jedną poprawkę: stałe przesunięcie o 0,4 piksela, wspólne dla wszystkich trzech serii rysunku 1, dobrane tak, żeby suma nagłówków zgadzała się z liczbą podaną w artykule. Środek ciężkości maski znacznika leży o ułamek piksela obok jego środka, bo linia serii dokleja się do znacznika z jednej strony. Poprawka jest jedną liczbą na cały rysunek, nie dopasowuje serii z osobna i nie zmienia kształtu szeregu.
+
+```bash
+python -m src.figures_digitised            # odczyt z PNG i kontrola
+python -m src.figures_digitised --sprawdz  # sama kontrola zapisanych tabel
+```
 
 ## Dane
 
@@ -196,12 +223,13 @@ Sam `pip install -r requirements.txt` zainstaluje build CPU, na którym trening 
 | 3. Analiza błędów | `03_misclassified_headlines_analysis.ipynb` | `src.evaluation.keywords_by_period`, `confidence_over_time`, `src.topics.build_misclassified_topics` | godziny, GPU |
 | 4. Tabele i rysunki | `04_tabele_i_rysunki.ipynb` | `src.evaluation.build_article_tables` | około 90 s, potem 30 s |
 | 5. Rysunki do złożenia | `python -m src.figures_publication` | `src.figures_publication.build` | sekundy |
+| 5a. Odczyt rysunków (awaryjnie, bez `data/`) | `python -m src.figures_digitised` | `src.figures_digitised.zapisz` | sekundy |
 
 Każdy etap badania ma tę samą postać: definicja procesu jest funkcją w `src/`, notebook ją wywołuje i pokazuje wyniki. Wejście z linii poleceń mają tylko dwa kroki, które nie są etapami badania i których nie powtarza się przy czytaniu wyników: scrapery (`python -m src.scraping`) i eksport rysunków do złożenia (`python -m src.figures_publication`).
 
 ## Testy
 
-Testy sprawdzają gwarancje metodologiczne, od których zależą wnioski: brak wycieku informacji z przyszłości przy podziale chronologicznym, rozłączność podzbiorów, to, że czyszczenie nagłówków nie usuwa treści, oraz to, że nagłówek złożony z samych dopisków nie ginie w potoku. Osobny plik pilnuje warunków, które wydawca stawia rysunkom i których nie widać w kodzie rysującym: brak tytułu na obrazku, szerokość łamu, rozdzielczość i liczba kanałów rastra oraz to, że profil drukarski nie zmienia rysunków roboczych. Testów jest 22, działają na próbie syntetycznej i na zapisanej tabeli liczebności, więc nie wymagają korpusu ani GPU i wykonują się w kilka sekund.
+Testy sprawdzają gwarancje metodologiczne, od których zależą wnioski: brak wycieku informacji z przyszłości przy podziale chronologicznym, rozłączność podzbiorów, to, że czyszczenie nagłówków nie usuwa treści, oraz to, że nagłówek złożony z samych dopisków nie ginie w potoku. Osobny plik pilnuje warunków, które wydawca stawia rysunkom i których nie widać w kodzie rysującym: brak tytułu na obrazku, szerokość łamu, rozdzielczość i liczba kanałów rastra oraz to, że profil drukarski nie zmienia rysunków roboczych. Trzeci plik pilnuje odczytu punktów danych z zapisanych rysunków: zgodności z liczbami podanymi w artykule, tego, że odczyt z PNG odtwarza zapisane tabele, i kształtu danych podawanych funkcjom rysującym. Testów jest 28, działają na próbie syntetycznej oraz na tabelach i rysunkach z repozytorium, więc nie wymagają korpusu ani GPU i wykonują się w kilka sekund.
 
 ```bash
 pip install -r requirements-dev.txt
@@ -231,6 +259,7 @@ Testy zweryfikowano mutacyjnie, na kopii projektu. Podmiana podziału chronologi
 │   ├── plot_style.py              # system wizualny: tokeny barw i proporcje
 │   ├── visualization.py           # rysunki
 │   ├── figures_publication.py     # eksport rysunków do złożenia w czasopiśmie
+│   ├── figures_digitised.py       # odczyt punktów danych z zapisanych PNG
 │   └── scraping/                  # scrapery (async HTML + JSON)
 ├── notebooks/                     # drivery: import z src/, wyniki i wykresy
 ├── data/                          # dane (duże pliki poza repozytorium)
@@ -291,6 +320,7 @@ Każdy plik w `outputs/` i `data/` ma funkcję, która go zapisuje. Katalogi `da
 | `outputs/tabela_punkty_odniesienia.csv`, `tabela_metryki_wydawcy.csv`, `tabela_tematy_bledow.csv/.md` | `evaluation.build_article_tables` | 4 |
 | `outputs/tabela_macierz_pomylek_test.csv`, `tabela_macierz_pomylek_walidacja.csv` | `evaluation.build_article_tables` przez `evaluation.confusion_table` | 4 |
 | macierze pomyłek `01_`, `02_` i `03_` w `outputs/figures/` | `evaluation.build_article_tables` przez `visualization.plot_confusion_matrix` | 4 |
+| `outputs/digitised/liczebnosci_miesieczne.csv`, `pewnosc_miesieczne.csv` | `figures_digitised.zapisz` | 5 |
 | `outputs/figures/publication/Fig1-Fig3` (PDF i TIFF) | `figures_publication.build` | 5 |
 
 Bazy prób Optuny (`models/herbert_optuna.db`, `models/bertopic_optuna.db`, `models/misclassified_optuna.db`) zapisuje sama Optuna; wczytanie istniejącej bazy pozwala obejrzeć wyniki strojenia bez powtarzania go, a przerwane strojenie podjąć. Każde kolejne wywołanie dokłada `n_trials` prób do już zapisanych, więc o liczbę prób w bazie trzeba zapytać samemu, a nie zakładać, że równa się ostatniemu argumentowi. Baza wiąże się z konkretnym zbiorem wejściowym: liczba pomyłek zmienia się przy każdym przeliczeniu predykcji, więc model tematyczny pomyłek zapisuje ją w atrybutach badania i ostrzega, gdy przestaje się zgadzać.
@@ -387,6 +417,9 @@ Spis pełny, bo README jest jedynym dokumentem opisującym to repozytorium. Funk
 | `plot_style.font_size` | rozmiar pisma jako wielokrotność bazowego, żeby napisy wewnątrz rysunku malały razem z nim |
 | **`figures_publication.build`** | eksport rysunków artykułu do osobnych plików, bez tytułów i w szerokości łamu |
 | `figures_publication.zapisz` | zapis jednej figury w kilku formatach, z kadrowaniem i kompresją wymaganą przez wydawcę |
+| **`figures_digitised.zapisz`** | odczyt punktów danych z zapisanych PNG do tabel w `outputs/digitised/` |
+| `figures_digitised.sprawdz` | porównanie odczytu z liczbami podanymi w artykule |
+| `figures_digitised.korpus_zastepczy`, `pewnosc_zastepcza` | odczyt w kształcie, jakiego oczekują funkcje rysujące |
 
 Każda funkcja rysująca przyjmuje `title`: `None` daje tytuł domyślny, własny napis go zastępuje, a `False` zostawia rysunek bez tytułu. Z ostatniego wariantu korzysta eksport do złożenia, bo podpis rysunku należy do tekstu artykułu, nie do pliku graficznego. Podpisy paneli w rysunkach wielopanelowych zostają, bo nazywają dane w panelu, a nie cały rysunek.
 

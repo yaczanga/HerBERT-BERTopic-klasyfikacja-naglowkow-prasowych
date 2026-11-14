@@ -26,9 +26,10 @@ Uruchomienie z korzenia projektu:
     python -m src.figures_publication --dpi 1000
 
 Fig1 i Fig3 czytaja korpus i plik predykcji z data/, ktorych repozytorium nie
-zawiera (patrz README, sekcja "Dane"). Fig2 odrysowuje sie takze bez nich,
-z tabeli outputs/tabela_macierz_pomylek_test.csv. Rysunek, ktorego danych nie
-ma, jest pomijany z komunikatem, a reszta eksportu dochodzi do konca.
+zawiera (patrz README, sekcja "Dane"). Bez nich powstaja z odczytu zapisanych
+PNG (src/figures_digitised.py), a eksport mowi o tym w komunikacie - to wyjscie
+awaryjne, nie rownowazne zrodlo. Fig2 nie potrzebuje ani jednego, ani drugiego:
+odrysowuje sie z tabeli outputs/tabela_macierz_pomylek_test.csv.
 """
 from __future__ import annotations
 
@@ -83,6 +84,17 @@ def zapisz(fig, stem: str, out_dir: Path = PUBLICATION_DIR,
     return zapisane
 
 
+# Rysunki zlozone z odczytu obrazka, a nie z danych zrodlowych. Lista sluzy do
+# tego, zeby eksport powiedzial o tym na koniec, a nie tylko w locie.
+ODTWORZONE = []
+
+
+def _ostrzez(stem: str, brakujacy) -> None:
+    ODTWORZONE.append(stem)
+    print(f"  UWAGA {stem}: brak {brakujacy.name}, rysunek odtworzony z odczytu "
+          f"zapisanego PNG (src/figures_digitised.py)")
+
+
 def _splaszcz_tiff(sciezka: Path, dpi: int) -> None:
     """Zdejmuje kanal alfa z zapisanego TIFF-a i wkleja rysunek na biel.
 
@@ -123,8 +135,16 @@ def fig1_liczebnosci():
     from src import data as ds
     from src.visualization import plot_monthly_counts
 
-    korpus = ds.load_and_prepare()
-    return plot_monthly_counts(korpus, title=False)
+    if config.RAW_CSV.exists():
+        korpus = ds.load_and_prepare()
+        return plot_monthly_counts(korpus, title=False)
+
+    from src import figures_digitised as odczyt
+
+    _ostrzez("Fig1", config.RAW_CSV)
+    return plot_monthly_counts(odczyt.korpus_zastepczy(),
+                               valid_start=odczyt.VALID_START,
+                               test_start=odczyt.TEST_START, title=False)
 
 
 def fig2_macierz_pomylek():
@@ -140,7 +160,13 @@ def fig3_pewnosc():
     from src.evaluation import confidence_over_time, load_predictions
     from src.visualization import plot_metric_over_time
 
-    pewnosc = confidence_over_time(load_predictions())
+    if config.PROBS_CSV.exists():
+        pewnosc = confidence_over_time(load_predictions())
+    else:
+        from src import figures_digitised as odczyt
+
+        _ostrzez("Fig3", config.PROBS_CSV)
+        pewnosc = odczyt.pewnosc_zastepcza()
     return plot_metric_over_time(pewnosc, "confidence", by_publisher=True,
                                  ylabel="Mean probability of true class",
                                  title=False)
@@ -291,6 +317,10 @@ def main(argv=None) -> int:
     wynik = build(nazwy=args.only, out_dir=args.out_dir, formats=formats,
                   dpi=args.dpi, wszystkie=args.wszystkie)
     print(f"Zapisane rysunki: {len(wynik)}")
+    if ODTWORZONE:
+        print(f"UWAGA: {', '.join(ODTWORZONE)} powstaly z odczytu zapisanych PNG, "
+              f"nie z danych zrodlowych. Po odzyskaniu data/ uruchom eksport "
+              f"ponownie i podmien pliki.")
     return 0 if wynik else 1
 
 
